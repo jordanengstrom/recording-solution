@@ -28,3 +28,7 @@ whisper_init_from_file_with_params_no_state: loading model from '/Users/jordan/.
 whisper_init_from_file_with_params_no_state: failed to open '/Users/jordan/.whisper/ggml-large-v3.bin'
 error: failed to initialize whisper context
 
+2026-05-18 21:37:44,104 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-18 21:38:35,016 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
+2026-05-18 21:38:50,090 [INFO] Extracting audio with FFmpeg
+2026-05-18 21:39:18,773 [INFO] Transcribing with Whisper.cpp
