@@ -3,3 +3,83 @@
 2026-05-19 09:49:57,355 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
 2026-05-19 09:50:12,461 [INFO] Extracting audio with FFmpeg
 2026-05-19 09:50:40,531 [INFO] Transcribing with Whisper.cpp
+2026-05-19 10:01:02,477 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-19 10:01:31,084 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
+2026-05-19 10:01:46,140 [INFO] Extracting audio with FFmpeg
+2026-05-19 10:02:16,264 [INFO] Transcribing with Whisper.cpp
+2026-05-19 10:20:14,320 [INFO] Transcript ready (2665 chars)
+2026-05-19 10:20:14,322 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-19 10:20:35,853 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-19 10:20:35,860 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-19 10:20:35,860 [INFO] Existing iCloud folder found, replacing: /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-18 14-14-50
+2026-05-19 10:20:46,502 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-18 14-14-50
+2026-05-19 10:20:46,505 [INFO] New recording detected: 2026-05-19 10-03-02.mp4
+2026-05-19 10:21:01,586 [INFO] Extracting audio with FFmpeg
+2026-05-19 10:21:01,750 [ERROR] Subprocess failed for /Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4: Command '['ffmpeg', '-i', '/Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4', '-vn', '-q:a', '2', '/Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp3']' returned non-zero exit status 254.
+2026-05-19 10:21:01,751 [ERROR] stderr:
+ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with Apple clang version 21.0.0 (clang-2100.0.123.102)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/8.1.1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gpl --enable-libsvtav1 --enable-libopus --enable-libx264 --enable-libmp3lame --enable-libdav1d --enable-libvmaf --enable-libvpx --enable-libx265 --enable-openssl --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      60. 26.101 / 60. 26.101
+  libavcodec     62. 28.101 / 62. 28.101
+  libavformat    62. 12.101 / 62. 12.101
+  libavdevice    62.  3.101 / 62.  3.101
+  libavfilter    11. 14.101 / 11. 14.101
+  libswscale      9.  5.101 /  9.  5.101
+  libswresample   6.  3.101 /  6.  3.101
+[in#0 @ 0xac0c1c000] Error opening input: No such file or directory
+Error opening input file /Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4.
+Error opening input files: No such file or directory
+
+2026-05-19 10:21:01,751 [INFO] New recording detected: 2026-05-19 10-03-02.mp4
+2026-05-19 10:21:16,817 [INFO] Extracting audio with FFmpeg
+2026-05-19 10:21:16,904 [ERROR] Subprocess failed for /Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4: Command '['ffmpeg', '-i', '/Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4', '-vn', '-q:a', '2', '/Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp3']' returned non-zero exit status 254.
+2026-05-19 10:21:16,904 [ERROR] stderr:
+ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with Apple clang version 21.0.0 (clang-2100.0.123.102)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/8.1.1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gpl --enable-libsvtav1 --enable-libopus --enable-libx264 --enable-libmp3lame --enable-libdav1d --enable-libvmaf --enable-libvpx --enable-libx265 --enable-openssl --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      60. 26.101 / 60. 26.101
+  libavcodec     62. 28.101 / 62. 28.101
+  libavformat    62. 12.101 / 62. 12.101
+  libavdevice    62.  3.101 / 62.  3.101
+  libavfilter    11. 14.101 / 11. 14.101
+  libswscale      9.  5.101 /  9.  5.101
+  libswresample   6.  3.101 /  6.  3.101
+[in#0 @ 0xadec20000] Error opening input: No such file or directory
+Error opening input file /Users/jordan/Recordings/Meetings/2026-05-19 10-03-02.mp4.
+Error opening input files: No such file or directory
+
+2026-05-19 10:21:16,904 [INFO] New recording detected: 2026-05-19 10-10-44.mp4
+2026-05-19 10:21:31,979 [INFO] Extracting audio with FFmpeg
+2026-05-19 10:21:36,070 [INFO] Transcribing with Whisper.cpp
+2026-05-19 10:23:44,974 [INFO] Transcript ready (300 chars)
+2026-05-19 10:23:44,976 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-19 10:23:48,891 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-19 10:23:48,893 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-19 10:23:49,867 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19 10-10-44
+2026-05-19 10:23:49,870 [INFO] New recording detected: 2026-05-19 10-10-44.mp4
+2026-05-19 10:24:04,878 [INFO] Extracting audio with FFmpeg
+2026-05-19 10:24:05,027 [INFO] Transcribing with Whisper.cpp
+2026-05-19 10:26:07,370 [INFO] Transcript ready (300 chars)
+2026-05-19 10:26:07,371 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-19 10:26:09,620 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-19 10:26:09,632 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-19 10:26:09,632 [INFO] Existing iCloud folder found, replacing: /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19 10-10-44
+2026-05-19 10:26:10,271 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19 10-10-44
+2026-05-19 12:33:24,250 [INFO] New recording detected: 2026-05-19_12-33-24.mp4
+2026-05-19 12:33:39,329 [INFO] Extracting audio with FFmpeg
+2026-05-19 12:33:39,513 [INFO] Transcribing with Whisper.cpp
+2026-05-19 12:33:53,467 [INFO] Transcript ready (220 chars)
+2026-05-19 12:33:53,469 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-19 12:34:07,026 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-19 12:34:07,037 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-19 12:34:07,061 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19_12-33-24
+2026-05-19 12:34:07,061 [INFO] New recording detected: 2026-05-19_12-33-24.mp4
+2026-05-19 12:34:22,134 [INFO] Extracting audio with FFmpeg
+2026-05-19 12:34:22,323 [INFO] Transcribing with Whisper.cpp
+2026-05-19 12:34:30,269 [INFO] Transcript ready (220 chars)
+2026-05-19 12:34:30,271 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-19 12:34:37,523 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-19 12:34:37,524 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-19 12:34:37,524 [INFO] Existing iCloud folder found, replacing: /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19_12-33-24
+2026-05-19 12:34:37,725 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-19_12-33-24
