@@ -1,39 +1,5 @@
-2026-05-18 21:31:28,431 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
-2026-05-18 21:31:39,766 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
-2026-05-18 21:31:46,007 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
-2026-05-18 21:32:01,082 [INFO] Extracting audio with FFmpeg
-2026-05-18 21:32:29,738 [INFO] Transcribing with Whisper.cpp
-2026-05-18 21:32:30,331 [ERROR] Subprocess failed for /Users/jordan/Recordings/Meetings/2026-05-18 14-14-50.mp4: Command '['whisper-cli', '-m', '/Users/jordan/.whisper/ggml-large-v3.bin', '-f', '/Users/jordan/Recordings/Meetings/2026-05-18 14-14-50.mp3', '-otxt', '-of', '/Users/jordan/Recordings/Meetings/2026-05-18 14-14-50']' returned non-zero exit status 3.
-2026-05-18 21:32:30,331 [ERROR] stderr:
-load_backend: loaded BLAS backend from /opt/homebrew/Cellar/ggml/0.9.11/libexec/libggml-blas.so
-ggml_metal_device_init: tensor API disabled for pre-M5 and pre-A19 devices
-ggml_metal_library_init: using embedded metal library
-ggml_metal_library_init: loaded in 0.024 sec
-ggml_metal_rsets_init: creating a residency set collection (keep_alive = 180 s)
-ggml_metal_device_init: GPU name:   MTL0
-ggml_metal_device_init: GPU family: MTLGPUFamilyApple9  (1009)
-ggml_metal_device_init: GPU family: MTLGPUFamilyCommon3 (3003)
-ggml_metal_device_init: GPU family: MTLGPUFamilyMetal4  (5002)
-ggml_metal_device_init: simdgroup reduction   = true
-ggml_metal_device_init: simdgroup matrix mul. = true
-ggml_metal_device_init: has unified memory    = true
-ggml_metal_device_init: has bfloat            = true
-ggml_metal_device_init: has tensor            = false
-ggml_metal_device_init: use residency sets    = true
-ggml_metal_device_init: use shared buffers    = true
-ggml_metal_device_init: recommendedMaxWorkingSetSize  = 14302.25 MB
-load_backend: loaded MTL backend from /opt/homebrew/Cellar/ggml/0.9.11/libexec/libggml-metal.so
-load_backend: loaded CPU backend from /opt/homebrew/Cellar/ggml/0.9.11/libexec/libggml-cpu-apple_m2_m3.so
-whisper_init_from_file_with_params_no_state: loading model from '/Users/jordan/.whisper/ggml-large-v3.bin'
-whisper_init_from_file_with_params_no_state: failed to open '/Users/jordan/.whisper/ggml-large-v3.bin'
-error: failed to initialize whisper context
-
-2026-05-18 21:37:44,104 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
-2026-05-18 21:38:35,016 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
-2026-05-18 21:38:50,090 [INFO] Extracting audio with FFmpeg
-2026-05-18 21:39:18,773 [INFO] Transcribing with Whisper.cpp
-2026-05-18 21:53:23,554 [INFO] Transcript ready (2665 chars)
-2026-05-18 21:53:23,556 [INFO] Summarizing with Ollama (qwen2.5:7b)
-2026-05-18 21:53:56,641 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2026-05-18 21:53:56,649 [INFO] Moving artifacts to iCloud
-2026-05-18 21:53:56,655 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-18 14-14-50
+2026-05-19 09:01:41,955 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-19 09:48:33,764 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-19 09:49:57,355 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
+2026-05-19 09:50:12,461 [INFO] Extracting audio with FFmpeg
+2026-05-19 09:50:40,531 [INFO] Transcribing with Whisper.cpp

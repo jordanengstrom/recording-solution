@@ -37,3 +37,8 @@ error: failed to initialize whisper context
 2026-05-18 21:53:56,641 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
 2026-05-18 21:53:56,649 [INFO] Moving artifacts to iCloud
 2026-05-18 21:53:56,655 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-18 14-14-50
+2026-05-19 09:01:41,955 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-19 09:48:33,764 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-19 09:49:57,355 [INFO] New recording detected: 2026-05-18 14-14-50.mp4
+2026-05-19 09:50:12,461 [INFO] Extracting audio with FFmpeg
+2026-05-19 09:50:40,531 [INFO] Transcribing with Whisper.cpp
