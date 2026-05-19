@@ -2,7 +2,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-import ollama, subprocess, time, logging, sys, traceback
+import ollama, subprocess, time, logging, sys, traceback, shutil
 
 # --- Logging: rotating daily, 7-day retention ---
 LOG_DIR  = Path("~/dev/recording-solution").expanduser()
@@ -35,6 +35,7 @@ ICLOUD = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expandu
 MODEL  = Path("~/.whisper/ggml-large-v3.bin").expanduser()
 LLM    = "qwen2.5:7b"   # local model served by Ollama on :11434
 
+
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
         if not e.src_path.endswith(".mp4"): return
@@ -52,12 +53,12 @@ class Handler(FileSystemEventHandler):
         mp3, stem = mp4.with_suffix(".mp3"), mp4.with_suffix('')
 
         log.info("Extracting audio with FFmpeg")
-        subprocess.run(["ffmpeg","-i",str(mp4),"-vn","-q:a","2",str(mp3)],
+        subprocess.run(["ffmpeg", "-i", str(mp4), "-vn", "-q:a", "2", str(mp3)],
                        check=True, capture_output=True)
 
         log.info("Transcribing with Whisper.cpp")
-        subprocess.run(["whisper-cli","-m",str(MODEL),"-f",str(mp3),
-                        "-otxt","-of",str(stem)],
+        subprocess.run(["whisper-cli", "-m", str(MODEL), "-f", str(mp3),
+                        "-otxt", "-of", str(stem)],
                        check=True, capture_output=True)
         transcript = Path(f"{stem}.txt").read_text()
         log.info("Transcript ready (%d chars)", len(transcript))
@@ -65,7 +66,7 @@ class Handler(FileSystemEventHandler):
         log.info("Summarizing with Ollama (%s)", LLM)
         resp = ollama.chat(
             model=LLM,
-            messages=[{"role":"user","content":
+            messages=[{"role": "user", "content":
                 "Summarize this client meeting. Output sections: Context, "
                 "Decisions, Action items (owner + due date), Open questions.\n\n"
                 + transcript}],
@@ -73,13 +74,18 @@ class Handler(FileSystemEventHandler):
         )
         summary = resp["message"]["content"]
 
-        log.info("Moving artifacts to iCloud")
-        out = ICLOUD / mp4.stem; out.mkdir(parents=True, exist_ok=True)
-        mp4.replace(out/mp4.name)
-        mp3.replace(out/mp3.name)
-        Path(f"{stem}.txt").replace(out/"transcript.txt")
-        (out/"summary.md").write_text(summary)
+        log.info("Copying artifacts to iCloud (originals remain in %s)", WATCH)
+        out = ICLOUD / mp4.stem
+        if out.exists():
+            log.info("Existing iCloud folder found, replacing: %s", out)
+            shutil.rmtree(out)
+        out.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(mp4, out / mp4.name)
+        shutil.copy2(mp3, out / mp3.name)
+        shutil.copy2(Path(f"{stem}.txt"), out / "transcript.txt")
+        (out / "summary.md").write_text(summary)
         log.info("Done → %s", out)
+
 
 if __name__ == "__main__":
     log.info("Meeting pipeline watcher starting. Watching %s", WATCH)
