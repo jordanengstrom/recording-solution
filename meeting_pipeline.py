@@ -1,32 +1,70 @@
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime, timedelta
 from pathlib import Path
-import ollama, subprocess, time, logging, sys, traceback, shutil
+import ollama, subprocess, time, logging, traceback, shutil
 
-# --- Logging: rotating daily, 7-day retention ---
+# --- Logging: single file with a trailing 14-day window ---
 LOG_DIR  = Path("~/dev/recording-solution").expanduser()
 LOG_FILE = LOG_DIR / "pipeline.log"
 
-file_handler = TimedRotatingFileHandler(
-    LOG_FILE,
-    when="midnight",     # rotate at 00:00 local time
-    interval=1,          # every 1 day
-    backupCount=7,       # keep 7 rotated files, auto-delete older
-    encoding="utf-8",
-)
-file_handler.suffix = "%Y-%m-%d"   # human-readable dated filenames
 
-stream_handler = logging.StreamHandler(sys.stdout)   # also echo to launchd's stdout
+class TrailingWindowFileHandler(logging.FileHandler):
+    """Single-file handler that keeps only entries newer than `window_days`.
+
+    The file is trimmed in place on startup and then periodically during normal
+    operation (every `check_every_hours`). Multi-line records (e.g. tracebacks)
+    are treated as continuations of the preceding timestamped line and inherit
+    its keep/drop decision, so we never orphan a traceback from its header.
+    """
+
+    TS_LEN = 19   # length of "YYYY-MM-DD HH:MM:SS" prefix in default asctime
+
+    def __init__(self, filename, window_days=14, check_every_hours=6, encoding="utf-8"):
+        super().__init__(filename, mode="a", encoding=encoding)
+        self.window         = timedelta(days=window_days)
+        self.check_interval = timedelta(hours=check_every_hours)
+        self._last_check    = datetime.min
+        self._trim()   # prune any backlog at startup
+
+    def emit(self, record):
+        super().emit(record)
+        if datetime.now() - self._last_check >= self.check_interval:
+            self._trim()
+
+    def _trim(self):
+        self._last_check = datetime.now()
+        path = Path(self.baseFilename)
+        if not path.exists(): return
+        cutoff = datetime.now() - self.window
+
+        self.acquire()
+        try:
+            self.close()
+            with path.open("r", encoding=self.encoding, errors="replace") as f:
+                lines = f.readlines()
+
+            kept, keep = [], False
+            for line in lines:
+                try:
+                    ts = datetime.strptime(line[:self.TS_LEN], "%Y-%m-%d %H:%M:%S")
+                    keep = ts >= cutoff
+                except (ValueError, IndexError):
+                    pass   # continuation line — inherits previous keep decision
+                if keep: kept.append(line)
+
+            path.write_text("".join(kept), encoding=self.encoding)
+            self.stream = self._open()
+        finally:
+            self.release()
+
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[file_handler, stream_handler],
+    handlers=[TrailingWindowFileHandler(LOG_FILE)],
     force=True,
 )
-sys.stdout.reconfigure(line_buffering=True)
-sys.stderr.reconfigure(line_buffering=True)
 log = logging.getLogger(__name__)
 
 # --- Paths and model ---
