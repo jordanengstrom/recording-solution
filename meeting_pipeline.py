@@ -93,9 +93,23 @@ class Handler(FileSystemEventHandler):
         log.info("New recording detected: %s", mp4.name)
         time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
+        # macOS FSEvents occasionally fires duplicate on_created events for the
+        # same file. Bail if the source is gone (a prior invocation already
+        # moved it) before we attempt anything destructive.
+        if not mp4.exists():
+            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4.name)
+            return
+
         # --- Stage 1: create per-meeting subdirectory and relocate the .mp4 ---
+        # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
+        # as a lock: whichever invocation creates the directory first owns this
+        # recording. A racing duplicate will get FileExistsError and exit clean.
         meeting_dir = WATCH / mp4.stem
-        meeting_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            meeting_dir.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            log.info("Meeting folder %s already claimed; skipping", meeting_dir.name)
+            return
         log.info("Created meeting folder: %s", meeting_dir)
 
         mp4_local = meeting_dir / mp4.name
