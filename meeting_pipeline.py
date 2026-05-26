@@ -38,7 +38,11 @@ LLM    = "qwen2.5:7b"   # local model served by Ollama on :11434
 
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
-        if not e.src_path.endswith(".mp4"): return
+        # Only react to .mp4 files dropped directly into WATCH by OBS.
+        # The observer is non-recursive, so subdirectory events don't fire here,
+        # and directory creations in WATCH (e.g. our own meeting folders) are
+        # filtered out by the .mp4 extension check.
+        if e.is_directory or not e.src_path.endswith(".mp4"): return
         try:
             self.process(Path(e.src_path))
         except subprocess.CalledProcessError as exc:
@@ -49,18 +53,33 @@ class Handler(FileSystemEventHandler):
 
     def process(self, mp4):
         log.info("New recording detected: %s", mp4.name)
-        time.sleep(15)                                 # let OBS finalize the moov atom
-        mp3, stem = mp4.with_suffix(".mp3"), mp4.with_suffix('')
+        time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
+        # --- Stage 1: create per-meeting subdirectory and relocate the .mp4 ---
+        meeting_dir = WATCH / mp4.stem
+        meeting_dir.mkdir(parents=True, exist_ok=True)
+        log.info("Created meeting folder: %s", meeting_dir)
+
+        mp4_local = meeting_dir / mp4.name
+        log.info("Moving recording into meeting folder")
+        shutil.move(str(mp4), str(mp4_local))
+        mp4 = mp4_local
+
+        mp3            = meeting_dir / f"{mp4.stem}.mp3"
+        transcript_txt = meeting_dir / "transcript.txt"
+        summary_md     = meeting_dir / "summary.md"
+
+        # --- Stage 2: extract audio, transcribe, summarize (all inside meeting_dir) ---
         log.info("Extracting audio with FFmpeg")
         subprocess.run(["ffmpeg", "-i", str(mp4), "-vn", "-q:a", "2", str(mp3)],
                        check=True, capture_output=True)
 
         log.info("Transcribing with Whisper.cpp")
+        # whisper-cli's -of takes a path WITHOUT extension; -otxt appends .txt
         subprocess.run(["whisper-cli", "-m", str(MODEL), "-f", str(mp3),
-                        "-otxt", "-of", str(stem)],
+                        "-otxt", "-of", str(meeting_dir / "transcript")],
                        check=True, capture_output=True)
-        transcript = Path(f"{stem}.txt").read_text()
+        transcript = transcript_txt.read_text()
         log.info("Transcript ready (%d chars)", len(transcript))
 
         log.info("Summarizing with Ollama (%s)", LLM)
@@ -72,18 +91,15 @@ class Handler(FileSystemEventHandler):
                 + transcript}],
             options={"num_ctx": 16384}
         )
-        summary = resp["message"]["content"]
+        summary_md.write_text(resp["message"]["content"])
 
-        log.info("Copying artifacts to iCloud (originals remain in %s)", WATCH)
+        # --- Stage 3: mirror the completed meeting folder to iCloud ---
+        log.info("Copying meeting folder to iCloud (originals remain in %s)", meeting_dir)
         out = ICLOUD / mp4.stem
         if out.exists():
             log.info("Existing iCloud folder found, replacing: %s", out)
             shutil.rmtree(out)
-        out.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(mp4, out / mp4.name)
-        shutil.copy2(mp3, out / mp3.name)
-        shutil.copy2(Path(f"{stem}.txt"), out / "transcript.txt")
-        (out / "summary.md").write_text(summary)
+        shutil.copytree(meeting_dir, out)
         log.info("Done → %s", out)
 
 
