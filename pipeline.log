@@ -71,3 +71,16 @@ FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recording
 2026-05-25 18:24:13,864 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_18-23-36
 2026-05-25 18:24:13,864 [INFO] New recording detected: 2026-05-25_18-23-36.mp4
 2026-05-25 18:24:28,871 [INFO] Source 2026-05-25_18-23-36.mp4 no longer exists; skipping (likely duplicate event)
+2026-05-25 18:53:17,174 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
+2026-05-25 18:53:31,804 [INFO] New recording detected: 2026-05-25_18-53-31.mp4
+2026-05-25 18:53:46,856 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-05-25_18-53-31
+2026-05-25 18:53:46,862 [INFO] Copying recording into meeting folder
+2026-05-25 18:53:46,874 [INFO] Extracting audio with FFmpeg
+2026-05-25 18:53:47,186 [INFO] Transcribing with Whisper.cpp
+2026-05-25 18:53:52,175 [INFO] Transcript ready (161 chars)
+2026-05-25 18:53:52,176 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-25 18:54:06,483 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-25 18:54:06,486 [INFO] Copying meeting folder to iCloud
+2026-05-25 18:54:06,506 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_18-53-31
+2026-05-25 18:54:06,507 [INFO] New recording detected: 2026-05-25_18-53-31.mp4
+2026-05-25 18:54:21,582 [INFO] Meeting folder 2026-05-25_18-53-31 already claimed; skipping
