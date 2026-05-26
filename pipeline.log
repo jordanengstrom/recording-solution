@@ -1,0 +1,61 @@
+2026-05-25 17:37:14,873 [INFO] New recording detected: 2026-05-25_17-37-14.mp4
+2026-05-25 17:37:29,947 [INFO] Extracting audio with FFmpeg
+2026-05-25 17:37:30,139 [INFO] Transcribing with Whisper.cpp
+2026-05-25 17:37:34,995 [INFO] Transcript ready (181 chars)
+2026-05-25 17:37:35,002 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-25 17:37:55,829 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-25 17:37:55,833 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-25 17:37:55,873 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_17-37-14
+2026-05-25 17:37:55,873 [INFO] New recording detected: 2026-05-25_17-37-14.mp4
+2026-05-25 17:38:10,912 [INFO] Extracting audio with FFmpeg
+2026-05-25 17:38:11,049 [INFO] Transcribing with Whisper.cpp
+2026-05-25 17:38:16,189 [INFO] Transcript ready (181 chars)
+2026-05-25 17:38:16,193 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-25 17:38:28,044 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-25 17:38:28,045 [INFO] Copying artifacts to iCloud (originals remain in /Users/jordan/Recordings/Meetings)
+2026-05-25 17:38:28,046 [INFO] Existing iCloud folder found, replacing: /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_17-37-14
+2026-05-25 17:38:28,107 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_17-37-14
+2026-05-25 17:51:14,933 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-25 17:52:16,555 [INFO] New recording detected: 2026-05-25_17-52-16.mp4
+2026-05-25 17:52:31,615 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-05-25_17-52-16
+2026-05-25 17:52:31,615 [INFO] Moving recording into meeting folder
+2026-05-25 17:52:31,616 [INFO] Extracting audio with FFmpeg
+2026-05-25 17:52:31,802 [INFO] Transcribing with Whisper.cpp
+2026-05-25 17:52:36,606 [INFO] Transcript ready (163 chars)
+2026-05-25 17:52:36,607 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-05-25 17:52:57,052 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-05-25 17:52:57,055 [INFO] Copying meeting folder to iCloud (originals remain in /Users/jordan/Recordings/Meetings/2026-05-25_17-52-16)
+2026-05-25 17:52:57,074 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-05-25_17-52-16
+2026-05-25 17:52:57,075 [INFO] New recording detected: 2026-05-25_17-52-16.mp4
+2026-05-25 17:53:12,150 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-05-25_17-52-16
+2026-05-25 17:53:12,150 [INFO] Moving recording into meeting folder
+2026-05-25 17:53:12,156 [ERROR] Pipeline failed for /Users/jordan/Recordings/Meetings/2026-05-25_17-52-16.mp4:
+Traceback (most recent call last):
+  File "/Users/jordan/.asdf/installs/python/3.14.0/lib/python3.14/shutil.py", line 918, in move
+    os.rename(src, real_dst)
+    ~~~~~~~~~^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recordings/Meetings/2026-05-25_17-52-16.mp4' -> '/Users/jordan/Recordings/Meetings/2026-05-25_17-52-16/2026-05-25_17-52-16.mp4'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/jordan/dev/recording-solution/meeting_pipeline.py", line 85, in on_created
+    self.process(Path(e.src_path))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/jordan/dev/recording-solution/meeting_pipeline.py", line 103, in process
+    shutil.move(str(mp4), str(mp4_local))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jordan/.asdf/installs/python/3.14.0/lib/python3.14/shutil.py", line 938, in move
+    copy_function(src, real_dst)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/jordan/.asdf/installs/python/3.14.0/lib/python3.14/shutil.py", line 529, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jordan/.asdf/installs/python/3.14.0/lib/python3.14/shutil.py", line 313, in copyfile
+    with open(src, 'rb') as fsrc:
+         ~~~~^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recordings/Meetings/2026-05-25_17-52-16.mp4'
+
+2026-05-25 18:12:58,951 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-25 18:15:39,713 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings
+2026-05-25 18:19:19,008 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings

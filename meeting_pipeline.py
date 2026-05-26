@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import ollama, subprocess, time, logging, traceback, shutil
 
+# /Users/jordan/Library/LaunchAgents/com.jordan.meetingpipeline.plist
 # --- Logging: single file with a trailing 14-day window ---
 LOG_DIR  = Path("~/dev/recording-solution").expanduser()
 LOG_FILE = LOG_DIR / "pipeline.log"
