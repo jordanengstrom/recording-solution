@@ -69,18 +69,18 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # --- Paths and model ---
-WATCH  = Path("~/Recordings/Meetings").expanduser()
-ICLOUD = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expanduser()
-MODEL  = Path("~/.whisper/ggml-large-v3.bin").expanduser()
-LLM    = "qwen2.5:7b"   # local model served by Ollama on :11434
+RAW      = Path("~/Recordings/Meetings-Raw").expanduser()   # OBS writes here; the watcher observes this dir
+MEETINGS = Path("~/Recordings/Meetings").expanduser()       # organized per-meeting folders live here
+ICLOUD   = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expanduser()
+MODEL    = Path("~/.whisper/ggml-large-v3.bin").expanduser()
+LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 
 
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
-        # Only react to .mp4 files dropped directly into WATCH by OBS.
+        # Only react to .mp4 files dropped directly into RAW by OBS.
         # The observer is non-recursive, so subdirectory events don't fire here,
-        # and directory creations in WATCH (e.g. our own meeting folders) are
-        # filtered out by the .mp4 extension check.
+        # and non-mp4 creations are filtered out by the extension check.
         if e.is_directory or not e.src_path.endswith(".mp4"): return
         try:
             self.process(Path(e.src_path))
@@ -90,22 +90,22 @@ class Handler(FileSystemEventHandler):
         except Exception:
             log.error("Pipeline failed for %s:\n%s", e.src_path, traceback.format_exc())
 
-    def process(self, mp4):
-        log.info("New recording detected: %s", mp4.name)
+    def process(self, mp4_raw):
+        log.info("New recording detected: %s", mp4_raw.name)
         time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
         # macOS FSEvents occasionally fires duplicate on_created events for the
-        # same file. Bail if the source is gone (a prior invocation already
-        # moved it) before we attempt anything destructive.
-        if not mp4.exists():
-            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4.name)
+        # same file. Bail if the source has vanished since the event fired.
+        if not mp4_raw.exists():
+            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4_raw.name)
             return
 
-        # --- Stage 1: create per-meeting subdirectory and relocate the .mp4 ---
+        # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
         # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
         # as a lock: whichever invocation creates the directory first owns this
         # recording. A racing duplicate will get FileExistsError and exit clean.
-        meeting_dir = WATCH / mp4.stem
+        # The original .mp4 stays in RAW as a safety net for retries.
+        meeting_dir = MEETINGS / mp4_raw.stem
         try:
             meeting_dir.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
@@ -113,10 +113,9 @@ class Handler(FileSystemEventHandler):
             return
         log.info("Created meeting folder: %s", meeting_dir)
 
-        mp4_local = meeting_dir / mp4.name
-        log.info("Moving recording into meeting folder")
-        shutil.move(str(mp4), str(mp4_local))
-        mp4 = mp4_local
+        mp4 = meeting_dir / mp4_raw.name
+        log.info("Copying recording into meeting folder")
+        shutil.copy2(str(mp4_raw), str(mp4))
 
         mp3            = meeting_dir / f"{mp4.stem}.mp3"
         transcript_txt = meeting_dir / "transcript.txt"
@@ -147,7 +146,7 @@ class Handler(FileSystemEventHandler):
         summary_md.write_text(resp["message"]["content"])
 
         # --- Stage 3: mirror the completed meeting folder to iCloud ---
-        log.info("Copying meeting folder to iCloud (originals remain in %s)", meeting_dir)
+        log.info("Copying meeting folder to iCloud")
         out = ICLOUD / mp4.stem
         if out.exists():
             log.info("Existing iCloud folder found, replacing: %s", out)
@@ -157,9 +156,9 @@ class Handler(FileSystemEventHandler):
 
 
 if __name__ == "__main__":
-    log.info("Meeting pipeline watcher starting. Watching %s", WATCH)
+    log.info("Meeting pipeline watcher starting. Watching %s", RAW)
     obs = Observer()
-    obs.schedule(Handler(), str(WATCH))
+    obs.schedule(Handler(), str(RAW))
     obs.start()
     try:
         while True: time.sleep(1)
