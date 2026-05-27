@@ -174,9 +174,15 @@ class Handler(FileSystemEventHandler):
         resp = ollama.chat(
             model=LLM,
             messages=[{"role": "user", "content":
-                "Summarize this client meeting. Output sections: Context, "
-                "Decisions, Action items (owner + due date), Open questions.\n\n"
-                + transcript}],
+                "Summarize this recording. Choose section headings that fit the "
+                "content. For example, a planning meeting might have Goals, Decisions, "
+                "Deliverables, Next Steps, etc. while a status update might have "
+                "Progress and Blockers. A recording of a lecture might have Topics, "
+                "Key Points, etc. Always include an Action items section with owners "
+                "and due dates where stated. It may be empty if action items are "
+                "not applicable for the type of recording/meeting you encounter. "
+                "Please keep in mind, you may encounter many different meeting "
+                "types and you should be able to handle them all.\n\n" + transcript}],
             options={"num_ctx": 16384}
         )
         summary_md.write_text(resp["message"]["content"])
