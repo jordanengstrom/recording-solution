@@ -75,6 +75,15 @@ ICLOUD   = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expan
 MODEL    = Path("~/.whisper/ggml-large-v3.bin").expanduser()
 LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 
+# --- Waiting for OBS to finish recording ---
+# on_created fires the instant OBS opens the file at "Start Recording"; OBS then
+# writes to it for the entire meeting (regularly 1-2 hours) and only finalizes
+# the moov atom at "Stop Recording". We must wait until OBS is done — detected by
+# the file size holding steady — before touching it.
+SETTLE_SECONDS = 60      # size must hold steady this long to count as finished
+POLL_SECONDS   = 5       # how often to re-check the size while waiting
+MAX_WAIT_HOURS = 4       # safety ceiling so a stuck/abandoned file can't block forever
+
 
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
@@ -90,15 +99,42 @@ class Handler(FileSystemEventHandler):
         except Exception:
             log.error("Pipeline failed for %s:\n%s", e.src_path, traceback.format_exc())
 
+    def _wait_until_complete(self, path):
+        """Block until `path` stops growing, i.e. OBS has stopped recording.
+
+        Returns True once the size holds steady for SETTLE_SECONDS, or False if
+        the file vanishes first (a macOS FSEvents duplicate on_created, or the
+        recording being discarded). The MAX_WAIT_HOURS ceiling guards against a
+        file that never settles (e.g. OBS crashed leaving the handle open).
+        """
+        deadline   = time.monotonic() + MAX_WAIT_HOURS * 3600
+        last_size  = -1
+        stable_for = 0
+        while time.monotonic() < deadline:
+            if not path.exists():
+                return False
+            size = path.stat().st_size
+            if size > 0 and size == last_size:
+                stable_for += POLL_SECONDS
+                if stable_for >= SETTLE_SECONDS:
+                    return True
+            else:
+                stable_for, last_size = 0, size
+            time.sleep(POLL_SECONDS)
+        log.warning("Source %s still changing after %dh; processing anyway",
+                    path.name, MAX_WAIT_HOURS)
+        return True
+
     def process(self, mp4_raw):
         log.info("New recording detected: %s", mp4_raw.name)
-        time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
-        # macOS FSEvents occasionally fires duplicate on_created events for the
-        # same file. Bail if the source has vanished since the event fired.
-        if not mp4_raw.exists():
-            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4_raw.name)
+        # OBS is still recording when on_created fires; wait for it to finish
+        # writing before we touch the file, otherwise we only capture the first
+        # few seconds of audio that have been flushed to disk so far.
+        if not self._wait_until_complete(mp4_raw):
+            log.info("Source %s vanished before it finished; skipping (likely duplicate event)", mp4_raw.name)
             return
+        log.info("Recording finished (%.0f MB); processing", mp4_raw.stat().st_size / 1e6)
 
         # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
         # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
