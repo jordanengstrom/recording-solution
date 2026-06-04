@@ -493,3 +493,4 @@ FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recording
 2026-06-03 16:42:38,486 [INFO] Copying meeting folder to iCloud
 2026-06-03 16:42:39,929 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-03_15-01-59
 2026-06-03 20:09:47,376 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
+2026-06-03 20:21:19,274 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
