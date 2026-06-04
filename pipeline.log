@@ -494,3 +494,129 @@ FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recording
 2026-06-03 16:42:39,929 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-03_15-01-59
 2026-06-03 20:09:47,376 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
 2026-06-03 20:21:19,274 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
+2026-06-03 20:28:55,341 [INFO] New recording detected: 2026-06-03_15-01-59.mp4
+2026-06-03 20:29:10,409 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-03_15-01-59
+2026-06-03 20:29:10,409 [INFO] Copying recording into meeting folder
+2026-06-03 20:29:11,763 [INFO] Extracting audio with FFmpeg
+2026-06-03 20:29:23,729 [INFO] Transcribing with faster-whisper
+2026-06-03 20:29:23,729 [INFO] Loading faster-whisper model 'large-v3' (cpu / int8) — first use only
+2026-06-03 20:29:24,335 [INFO] HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-large-v3/revision/main "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,498 [INFO] HTTP Request: HEAD https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-03 20:29:24,500 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-03 20:29:24,512 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/config.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,529 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/config.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,530 [INFO] HTTP Request: HEAD https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/vocabulary.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-03 20:29:24,531 [INFO] HTTP Request: HEAD https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-03 20:29:24,534 [INFO] HTTP Request: HEAD https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-03 20:29:24,539 [INFO] HTTP Request: HEAD https://huggingface.co/Systran/faster-whisper-large-v3/resolve/edaa852ec7e145841d8ffdb056a99866b5f0a478/model.bin "HTTP/1.1 302 Found"
+2026-06-03 20:29:24,836 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/tokenizer.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,836 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,837 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/vocabulary.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,869 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,869 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/vocabulary.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,874 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Systran/faster-whisper-large-v3/edaa852ec7e145841d8ffdb056a99866b5f0a478/tokenizer.json "HTTP/1.1 200 OK"
+2026-06-03 20:29:24,929 [INFO] HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-large-v3/xet-read-token/edaa852ec7e145841d8ffdb056a99866b5f0a478 "HTTP/1.1 200 OK"
+2026-06-03 20:30:21,577 [INFO] Processing audio with duration 40:04.137
+2026-06-03 20:30:26,679 [INFO] VAD filter removed 01:40.009 of audio
+2026-06-03 20:30:27,745 [INFO] Detected en (p=1.00); 2404s audio, 2304s after VAD
+2026-06-03 20:31:58,453 [INFO]   …25 segments transcribed, up to 91s
+2026-06-03 20:32:52,196 [INFO]   …50 segments transcribed, up to 179s
+2026-06-03 20:34:03,423 [INFO]   …75 segments transcribed, up to 290s
+2026-06-03 20:35:22,837 [INFO]   …100 segments transcribed, up to 377s
+2026-06-03 20:36:29,077 [INFO]   …125 segments transcribed, up to 491s
+2026-06-03 20:37:19,545 [INFO]   …150 segments transcribed, up to 591s
+2026-06-03 20:38:11,264 [INFO]   …175 segments transcribed, up to 685s
+2026-06-03 20:38:52,016 [INFO]   …200 segments transcribed, up to 737s
+2026-06-03 20:39:56,180 [INFO]   …225 segments transcribed, up to 817s
+2026-06-03 20:40:55,400 [INFO]   …250 segments transcribed, up to 905s
+2026-06-03 20:42:11,394 [INFO]   …275 segments transcribed, up to 1011s
+2026-06-03 20:42:48,778 [INFO]   …300 segments transcribed, up to 1079s
+2026-06-03 20:43:50,859 [INFO]   …325 segments transcribed, up to 1181s
+2026-06-03 20:44:52,824 [INFO]   …350 segments transcribed, up to 1254s
+2026-06-03 20:45:47,934 [INFO]   …375 segments transcribed, up to 1369s
+2026-06-03 20:46:27,210 [INFO]   …400 segments transcribed, up to 1421s
+2026-06-03 20:47:23,307 [INFO]   …425 segments transcribed, up to 1489s
+2026-06-03 20:48:20,036 [INFO]   …450 segments transcribed, up to 1562s
+2026-06-03 20:49:03,925 [INFO]   …475 segments transcribed, up to 1639s
+2026-06-03 20:50:01,241 [INFO]   …500 segments transcribed, up to 1708s
+2026-06-03 20:51:06,527 [INFO]   …525 segments transcribed, up to 1790s
+2026-06-03 20:52:15,515 [INFO]   …550 segments transcribed, up to 1869s
+2026-06-03 20:52:51,406 [INFO]   …575 segments transcribed, up to 1926s
+2026-06-03 20:53:45,531 [INFO]   …600 segments transcribed, up to 2023s
+2026-06-03 20:54:41,426 [INFO]   …625 segments transcribed, up to 2119s
+2026-06-03 20:55:34,418 [INFO]   …650 segments transcribed, up to 2204s
+2026-06-03 20:56:30,591 [INFO]   …675 segments transcribed, up to 2281s
+2026-06-03 20:57:28,946 [INFO]   …700 segments transcribed, up to 2351s
+2026-06-03 20:57:59,015 [INFO] Transcript ready (51248 chars, 716 segments)
+2026-06-03 20:57:59,015 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-03 20:59:01,655 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-03 20:59:01,660 [INFO] Copying meeting folder to iCloud
+2026-06-03 20:59:01,661 [INFO] Existing iCloud folder found, replacing: /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-03_15-01-59
+2026-06-03 20:59:03,085 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-03_15-01-59
+2026-06-04 09:24:15,123 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
+2026-06-04 09:55:21,252 [INFO] New recording detected: 2026-06-04_09-55-21.mp4
+2026-06-04 09:55:36,335 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_09-55-21
+2026-06-04 09:55:36,336 [INFO] Copying recording into meeting folder
+2026-06-04 09:55:36,349 [INFO] Extracting audio with FFmpeg
+2026-06-04 09:55:36,712 [INFO] Transcribing with faster-whisper
+2026-06-04 09:55:36,712 [INFO] Loading faster-whisper model 'large-v3' (cpu / int8) — first use only
+2026-06-04 09:55:37,087 [INFO] HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-large-v3/revision/main "HTTP/1.1 200 OK"
+2026-06-04 09:55:43,523 [INFO] Processing audio with duration 00:11.007
+2026-06-04 09:55:43,657 [INFO] VAD filter removed 00:11.007 of audio
+2026-06-04 09:55:43,665 [INFO] Detected en (p=1.00); 11s audio, 0s after VAD
+2026-06-04 09:55:43,666 [INFO] Transcript ready (0 chars, 0 segments)
+2026-06-04 09:55:43,666 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 09:56:15,485 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 09:56:15,492 [INFO] Copying meeting folder to iCloud
+2026-06-04 09:56:15,516 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_09-55-21
+2026-06-04 09:56:15,518 [INFO] New recording detected: 2026-06-04_09-55-21.mp4
+2026-06-04 09:56:30,577 [INFO] Meeting folder 2026-06-04_09-55-21 already claimed; skipping
+2026-06-04 10:58:44,201 [INFO] New recording detected: 2026-06-04_10-58-44.mp4
+2026-06-04 10:58:59,281 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_10-58-44
+2026-06-04 10:58:59,282 [INFO] Copying recording into meeting folder
+2026-06-04 10:58:59,298 [INFO] Extracting audio with FFmpeg
+2026-06-04 10:58:59,472 [INFO] Transcribing with faster-whisper
+2026-06-04 10:58:59,626 [INFO] Processing audio with duration 00:10.708
+2026-06-04 10:58:59,672 [INFO] VAD filter removed 00:10.708 of audio
+2026-06-04 10:58:59,688 [INFO] Detected en (p=1.00); 11s audio, 0s after VAD
+2026-06-04 10:58:59,690 [INFO] Transcript ready (0 chars, 0 segments)
+2026-06-04 10:58:59,690 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 10:59:42,197 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 10:59:42,213 [INFO] Copying meeting folder to iCloud
+2026-06-04 10:59:42,234 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_10-58-44
+2026-06-04 10:59:42,237 [INFO] New recording detected: 2026-06-04_10-58-44.mp4
+2026-06-04 10:59:57,282 [INFO] Meeting folder 2026-06-04_10-58-44 already claimed; skipping
+2026-06-04 11:32:46,843 [INFO] New recording detected: 2026-06-04_11-32-46.mp4
+2026-06-04 11:33:01,935 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_11-32-46
+2026-06-04 11:33:01,936 [INFO] Copying recording into meeting folder
+2026-06-04 11:33:01,947 [INFO] Extracting audio with FFmpeg
+2026-06-04 11:33:02,161 [INFO] Transcribing with faster-whisper
+2026-06-04 11:33:02,301 [INFO] Processing audio with duration 00:12.393
+2026-06-04 11:33:02,356 [INFO] VAD filter removed 00:12.393 of audio
+2026-06-04 11:33:02,376 [INFO] Detected en (p=1.00); 12s audio, 0s after VAD
+2026-06-04 11:33:02,378 [INFO] Transcript ready (0 chars, 0 segments)
+2026-06-04 11:33:02,378 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 11:33:46,137 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 11:33:46,146 [INFO] Copying meeting folder to iCloud
+2026-06-04 11:33:46,173 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_11-32-46
+2026-06-04 11:33:46,174 [INFO] New recording detected: 2026-06-04_11-32-46.mp4
+2026-06-04 11:34:01,249 [INFO] Meeting folder 2026-06-04_11-32-46 already claimed; skipping
+2026-06-04 12:28:58,572 [INFO] New recording detected: 2026-06-04_11-32-46.mp4
+2026-06-04 12:29:13,627 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_11-32-46
+2026-06-04 12:29:13,627 [INFO] Copying recording into meeting folder
+2026-06-04 12:29:15,368 [INFO] Extracting audio with FFmpeg
+2026-06-04 12:29:29,541 [INFO] Transcribing with faster-whisper
+2026-06-04 12:29:32,273 [INFO] Processing audio with duration 47:09.951
+2026-06-04 12:29:38,801 [INFO] VAD filter removed 06:52.799 of audio
+2026-06-04 12:29:40,714 [INFO] Detected en (p=1.00); 2830s audio, 2417s after VAD
+2026-06-04 12:30:32,459 [INFO]   …25 segments transcribed, up to 93s
+2026-06-04 12:31:25,502 [INFO]   …50 segments transcribed, up to 241s
+2026-06-04 12:32:54,667 [INFO]   …75 segments transcribed, up to 438s
+2026-06-04 12:34:22,255 [INFO]   …100 segments transcribed, up to 574s
+2026-06-04 12:36:37,043 [INFO]   …125 segments transcribed, up to 761s
+2026-06-04 12:39:13,493 [INFO]   …150 segments transcribed, up to 914s
+2026-06-04 12:42:01,734 [INFO]   …175 segments transcribed, up to 1070s
+2026-06-04 12:43:40,067 [INFO]   …200 segments transcribed, up to 1172s
+2026-06-04 12:45:34,540 [INFO]   …225 segments transcribed, up to 1268s
+2026-06-04 12:47:53,792 [INFO]   …250 segments transcribed, up to 1373s
+2026-06-04 12:50:04,716 [INFO]   …275 segments transcribed, up to 1491s
