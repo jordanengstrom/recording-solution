@@ -2,6 +2,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from datetime import datetime, timedelta
 from pathlib import Path
+from faster_whisper import WhisperModel
 import ollama, subprocess, time, logging, traceback, shutil
 
 # /Users/jordan/Library/LaunchAgents/com.jordan.meetingpipeline.plist
@@ -68,21 +69,36 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# --- Paths and model ---
+# --- Paths and models ---
 RAW      = Path("~/Recordings/Meetings-Raw").expanduser()   # OBS writes here; the watcher observes this dir
 MEETINGS = Path("~/Recordings/Meetings").expanduser()       # organized per-meeting folders live here
 ICLOUD   = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expanduser()
-MODEL    = Path("~/.whisper/ggml-large-v3.bin").expanduser()
 LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 
-# --- Waiting for OBS to finish recording ---
-# on_created fires the instant OBS opens the file at "Start Recording"; OBS then
-# writes to it for the entire meeting (regularly 1-2 hours) and only finalizes
-# the moov atom at "Stop Recording". We must wait until OBS is done — detected by
-# the file size holding steady — before touching it.
-SETTLE_SECONDS = 60      # size must hold steady this long to count as finished
-POLL_SECONDS   = 5       # how often to re-check the size while waiting
-MAX_WAIT_HOURS = 4       # safety ceiling so a stuck/abandoned file can't block forever
+# faster-whisper (CTranslate2). On Apple Silicon CTranslate2 has no Metal/GPU
+# backend, so this runs CPU-only; int8 is the best-performing CPU precision.
+WHISPER_MODEL   = "large-v3"                       # CT2 model name; auto-downloaded & cached on first run
+WHISPER_DEVICE  = "cpu"
+WHISPER_COMPUTE = "int8"
+WHISPER_CACHE   = Path("~/.whisper").expanduser()  # keep the CT2 model alongside other local models
+
+# Lazy singleton: load the model once on first use, then reuse for the life of
+# the watcher process. Avoids paying the load cost at startup if no meeting ever
+# happens, and avoids reloading per meeting.
+_whisper_model = None
+
+def get_whisper_model():
+    global _whisper_model
+    if _whisper_model is None:
+        log.info("Loading faster-whisper model '%s' (%s / %s) — first use only",
+                 WHISPER_MODEL, WHISPER_DEVICE, WHISPER_COMPUTE)
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL,
+            device=WHISPER_DEVICE,
+            compute_type=WHISPER_COMPUTE,
+            download_root=str(WHISPER_CACHE),
+        )
+    return _whisper_model
 
 
 class Handler(FileSystemEventHandler):
@@ -99,42 +115,15 @@ class Handler(FileSystemEventHandler):
         except Exception:
             log.error("Pipeline failed for %s:\n%s", e.src_path, traceback.format_exc())
 
-    def _wait_until_complete(self, path):
-        """Block until `path` stops growing, i.e. OBS has stopped recording.
-
-        Returns True once the size holds steady for SETTLE_SECONDS, or False if
-        the file vanishes first (a macOS FSEvents duplicate on_created, or the
-        recording being discarded). The MAX_WAIT_HOURS ceiling guards against a
-        file that never settles (e.g. OBS crashed leaving the handle open).
-        """
-        deadline   = time.monotonic() + MAX_WAIT_HOURS * 3600
-        last_size  = -1
-        stable_for = 0
-        while time.monotonic() < deadline:
-            if not path.exists():
-                return False
-            size = path.stat().st_size
-            if size > 0 and size == last_size:
-                stable_for += POLL_SECONDS
-                if stable_for >= SETTLE_SECONDS:
-                    return True
-            else:
-                stable_for, last_size = 0, size
-            time.sleep(POLL_SECONDS)
-        log.warning("Source %s still changing after %dh; processing anyway",
-                    path.name, MAX_WAIT_HOURS)
-        return True
-
     def process(self, mp4_raw):
         log.info("New recording detected: %s", mp4_raw.name)
+        time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
-        # OBS is still recording when on_created fires; wait for it to finish
-        # writing before we touch the file, otherwise we only capture the first
-        # few seconds of audio that have been flushed to disk so far.
-        if not self._wait_until_complete(mp4_raw):
-            log.info("Source %s vanished before it finished; skipping (likely duplicate event)", mp4_raw.name)
+        # macOS FSEvents occasionally fires duplicate on_created events for the
+        # same file. Bail if the source has vanished since the event fired.
+        if not mp4_raw.exists():
+            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4_raw.name)
             return
-        log.info("Recording finished (%.0f MB); processing", mp4_raw.stat().st_size / 1e6)
 
         # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
         # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
@@ -162,27 +151,40 @@ class Handler(FileSystemEventHandler):
         subprocess.run(["ffmpeg", "-i", str(mp4), "-vn", "-q:a", "2", str(mp3)],
                        check=True, capture_output=True)
 
-        log.info("Transcribing with Whisper.cpp")
-        # whisper-cli's -of takes a path WITHOUT extension; -otxt appends .txt
-        subprocess.run(["whisper-cli", "-m", str(MODEL), "-f", str(mp3),
-                        "-otxt", "-of", str(meeting_dir / "transcript")],
-                       check=True, capture_output=True)
-        transcript = transcript_txt.read_text()
-        log.info("Transcript ready (%d chars)", len(transcript))
+        log.info("Transcribing with faster-whisper")
+        model = get_whisper_model()
+        segments, info = model.transcribe(
+            str(mp3),
+            language="en",                 # meetings are English; skip detection (remove for auto-detect)
+            beam_size=5,                   # more robust than greedy decoding
+            vad_filter=True,               # Silero VAD strips silence -> kills silence-hallucination at the source
+            vad_parameters=dict(min_silence_duration_ms=500, speech_pad_ms=400),
+            condition_on_previous_text=False,  # the loop-killer: a bad segment can't poison the next (whisper.cpp -mc 0 analog)
+            no_speech_threshold=0.6,       # discard segments the model is confident are non-speech
+            word_timestamps=True,          # required for hallucination_silence_threshold below
+            hallucination_silence_threshold=2.0,  # skip silent gaps that tend to trigger hallucinated text
+        )
+        log.info("Detected %s (p=%.2f); %.0fs audio, %.0fs after VAD",
+                 info.language, info.language_probability, info.duration, info.duration_after_vad)
+
+        # `segments` is a lazy generator — iterating it is what actually runs the
+        # transcription. We log progress periodically since CPU-only runs are slow.
+        lines = []
+        for i, seg in enumerate(segments, 1):
+            lines.append(seg.text.strip())
+            if i % 25 == 0:
+                log.info("  …%d segments transcribed, up to %.0fs", i, seg.end)
+        transcript = "\n".join(lines)
+        transcript_txt.write_text(transcript + "\n", encoding="utf-8")
+        log.info("Transcript ready (%d chars, %d segments)", len(transcript), len(lines))
 
         log.info("Summarizing with Ollama (%s)", LLM)
         resp = ollama.chat(
             model=LLM,
             messages=[{"role": "user", "content":
-                "Summarize this recording. Choose section headings that fit the "
-                "content. For example, a planning meeting might have Goals, Decisions, "
-                "Deliverables, Next Steps, etc. while a status update might have "
-                "Progress and Blockers. A recording of a lecture might have Topics, "
-                "Key Points, etc. Always include an Action items section with owners "
-                "and due dates where stated. It may be empty if action items are "
-                "not applicable for the type of recording/meeting you encounter. "
-                "Please keep in mind, you may encounter many different meeting "
-                "types and you should be able to handle them all.\n\n" + transcript}],
+                "Summarize this client meeting. Output sections: Context, "
+                "Decisions, Action items (owner + due date), Open questions.\n\n"
+                + transcript}],
             options={"num_ctx": 16384}
         )
         summary_md.write_text(resp["message"]["content"])
