@@ -701,3 +701,22 @@ FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recording
 2026-06-08 13:23:26,449 [INFO]   …75 segments transcribed, up to 570s
 2026-06-08 13:24:57,407 [INFO]   …100 segments transcribed, up to 760s
 2026-06-08 13:26:23,376 [INFO]   …125 segments transcribed, up to 910s
+2026-06-08 13:27:59,328 [INFO]   …150 segments transcribed, up to 1059s
+2026-06-08 13:29:18,763 [INFO]   …175 segments transcribed, up to 1208s
+2026-06-08 13:30:48,599 [INFO]   …200 segments transcribed, up to 1387s
+2026-06-08 13:32:03,285 [INFO]   …225 segments transcribed, up to 1562s
+2026-06-08 13:33:03,884 [INFO]   …250 segments transcribed, up to 1672s
+2026-06-08 13:34:49,375 [INFO]   …275 segments transcribed, up to 1866s
+2026-06-08 13:36:11,018 [INFO]   …300 segments transcribed, up to 2006s
+2026-06-08 13:37:27,802 [INFO]   …325 segments transcribed, up to 2150s
+2026-06-08 13:38:38,906 [INFO]   …350 segments transcribed, up to 2249s
+2026-06-08 13:40:15,522 [INFO]   …375 segments transcribed, up to 2403s
+2026-06-08 13:41:24,360 [INFO]   …400 segments transcribed, up to 2528s
+2026-06-08 13:42:51,646 [INFO]   …425 segments transcribed, up to 2673s
+2026-06-08 13:44:29,959 [INFO]   …450 segments transcribed, up to 2837s
+2026-06-08 13:45:50,619 [INFO]   …475 segments transcribed, up to 2981s
+2026-06-08 13:46:00,945 [INFO] Transcript ready (37555 chars, 478 segments)
+2026-06-08 13:46:00,945 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-08 13:46:54,035 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-08 13:46:54,050 [INFO] Copying meeting folder to iCloud
+2026-06-08 13:46:56,339 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-08_09-00-15
