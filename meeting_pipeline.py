@@ -75,12 +75,25 @@ MEETINGS = Path("~/Recordings/Meetings").expanduser()       # organized per-meet
 ICLOUD   = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expanduser()
 LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 
+# --- File-stability settling ---
+# OBS finalizing its moov atom, a Finder drag, or a cross-volume `cp` all leave
+# the file growing after the on_created event fires. Instead of a fixed sleep,
+# poll size+mtime until they stop changing for SETTLE_STABLE_CHECKS consecutive
+# polls. This adapts to a 12s in-place finalize and a 4-minute multi-GB copy alike.
+SETTLE_POLL_SECONDS  = 3     # seconds between size/mtime samples
+SETTLE_STABLE_CHECKS = 3     # consecutive unchanged samples required to call it done
+SETTLE_TIMEOUT       = 1800  # hard ceiling (s); give up rather than wait forever
+
 # faster-whisper (CTranslate2). On Apple Silicon CTranslate2 has no Metal/GPU
 # backend, so this runs CPU-only; int8 is the best-performing CPU precision.
 WHISPER_MODEL   = "large-v3"                       # CT2 model name; auto-downloaded & cached on first run
 WHISPER_DEVICE  = "cpu"
 WHISPER_COMPUTE = "int8"
 WHISPER_CACHE   = Path("~/.whisper").expanduser()  # keep the CT2 model alongside other local models
+
+# Quiet the first-run HF Hub download chatter so it doesn't flood pipeline.log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
 
 # Lazy singleton: load the model once on first use, then reuse for the life of
 # the watcher process. Avoids paying the load cost at startup if no meeting ever
@@ -101,6 +114,42 @@ def get_whisper_model():
     return _whisper_model
 
 
+def wait_until_stable(path):
+    """Block until `path` stops growing, or raise if it vanishes / never settles.
+
+    Returns True when the file's (size, mtime) is unchanged across
+    SETTLE_STABLE_CHECKS consecutive polls. Returns False if the file
+    disappears mid-wait (a duplicate-event source that was already claimed and
+    cleaned up, or an aborted copy). Raises TimeoutError if it never settles
+    within SETTLE_TIMEOUT — better to surface that than to transcode a partial.
+    """
+    deadline   = time.monotonic() + SETTLE_TIMEOUT
+    last_sig   = None
+    stable_for = 0
+
+    while True:
+        try:
+            st = path.stat()
+        except FileNotFoundError:
+            return False
+        sig = (st.st_size, st.st_mtime)
+
+        if sig == last_sig:
+            stable_for += 1
+            if stable_for >= SETTLE_STABLE_CHECKS:
+                return True
+        else:
+            stable_for = 0
+            last_sig = sig
+
+        if time.monotonic() > deadline:
+            raise TimeoutError(
+                f"{path.name} never stopped changing within {SETTLE_TIMEOUT}s "
+                f"(last size {sig[0]} bytes)"
+            )
+        time.sleep(SETTLE_POLL_SECONDS)
+
+
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
         # Only react to .mp4 files dropped directly into RAW by OBS.
@@ -117,13 +166,15 @@ class Handler(FileSystemEventHandler):
 
     def process(self, mp4_raw):
         log.info("New recording detected: %s", mp4_raw.name)
-        time.sleep(15)                                 # let OBS finalize the moov atom BEFORE we touch the file
 
-        # macOS FSEvents occasionally fires duplicate on_created events for the
-        # same file. Bail if the source has vanished since the event fired.
-        if not mp4_raw.exists():
-            log.info("Source %s no longer exists; skipping (likely duplicate event)", mp4_raw.name)
+        # Wait for the file to finish landing instead of a fixed sleep. This
+        # covers OBS finalizing the moov atom AND large copies/drags that take
+        # longer than the old 15s window. A vanished source (duplicate event,
+        # aborted copy) returns False and we bail cleanly.
+        if not wait_until_stable(mp4_raw):
+            log.info("Source %s vanished before it settled; skipping (likely duplicate event)", mp4_raw.name)
             return
+        log.info("Source %s settled (%d bytes); processing", mp4_raw.name, mp4_raw.stat().st_size)
 
         # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
         # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
