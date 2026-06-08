@@ -3,7 +3,7 @@ from watchdog.events import FileSystemEventHandler
 from datetime import datetime, timedelta
 from pathlib import Path
 from faster_whisper import WhisperModel
-import ollama, subprocess, time, logging, traceback, shutil
+import ollama, subprocess, time, logging, traceback, shutil, threading, queue
 
 # /Users/jordan/Library/LaunchAgents/com.jordan.meetingpipeline.plist
 # --- Logging: single file with a trailing 14-day window ---
@@ -75,6 +75,30 @@ MEETINGS = Path("~/Recordings/Meetings").expanduser()       # organized per-meet
 ICLOUD   = Path("~/Library/Mobile Documents/com~apple~CloudDocs/Meetings").expanduser()
 LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 
+# --- Concurrency ---
+# The watchdog observer thread does nothing but enqueue detected files; a small
+# pool of worker threads drains the queue and does the actual (slow, CPU-bound)
+# processing. This decouples detection from work: new files are still noticed
+# and queued promptly even while a long transcription is in flight, instead of
+# the observer thread blocking inside process() as it did when on_created called
+# process() directly.
+#
+# NUM_WORKERS is deliberately conservative. Transcription is CPU-only int8
+# inference that already saturates multiple cores per job, so running many jobs
+# at once just thrashes the cores and helps nothing. 1 keeps behaviour identical
+# to the old serial pipeline (just with a responsive watcher); 2 lets a short
+# meeting slip past a long one. Above ~2 is almost never worth it on one machine.
+NUM_WORKERS = 1
+work_q: "queue.Queue[Path]" = queue.Queue()
+
+# Files currently queued or in flight, so a duplicate FSEvent for a path we're
+# already handling is dropped at enqueue time rather than racing down to the
+# mkdir lock. Guarded by _inflight_lock. The mkdir(exist_ok=False) lock remains
+# the *authoritative* guard (it also defends against a second process); this set
+# is just an early, cheap filter within this process.
+_inflight: set[str] = set()
+_inflight_lock = threading.Lock()
+
 # --- File-stability settling ---
 # OBS finalizing its moov atom, a Finder drag, or a cross-volume `cp` all leave
 # the file growing after the on_created event fires. Instead of a fixed sleep,
@@ -98,19 +122,31 @@ logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
 # Lazy singleton: load the model once on first use, then reuse for the life of
 # the watcher process. Avoids paying the load cost at startup if no meeting ever
 # happens, and avoids reloading per meeting.
+#
+# With NUM_WORKERS > 1 the lazy init must be guarded so two workers don't both
+# start loading on the first concurrent jobs. The lock is held only around the
+# one-time construction; steady-state calls just read the already-set global.
+# Note: a single WhisperModel is shared across workers. faster-whisper does not
+# document model.transcribe() as safe for truly concurrent calls on one instance,
+# so if you ever raise NUM_WORKERS for real parallel transcription, give each
+# worker its own model (or serialize transcribe() behind its own lock) rather
+# than sharing this one.
 _whisper_model = None
+_whisper_lock  = threading.Lock()
 
 def get_whisper_model():
     global _whisper_model
     if _whisper_model is None:
-        log.info("Loading faster-whisper model '%s' (%s / %s) — first use only",
-                 WHISPER_MODEL, WHISPER_DEVICE, WHISPER_COMPUTE)
-        _whisper_model = WhisperModel(
-            WHISPER_MODEL,
-            device=WHISPER_DEVICE,
-            compute_type=WHISPER_COMPUTE,
-            download_root=str(WHISPER_CACHE),
-        )
+        with _whisper_lock:
+            if _whisper_model is None:   # re-check inside the lock (double-checked locking)
+                log.info("Loading faster-whisper model '%s' (%s / %s) — first use only",
+                         WHISPER_MODEL, WHISPER_DEVICE, WHISPER_COMPUTE)
+                _whisper_model = WhisperModel(
+                    WHISPER_MODEL,
+                    device=WHISPER_DEVICE,
+                    compute_type=WHISPER_COMPUTE,
+                    download_root=str(WHISPER_CACHE),
+                )
     return _whisper_model
 
 
@@ -150,108 +186,146 @@ def wait_until_stable(path):
         time.sleep(SETTLE_POLL_SECONDS)
 
 
+def process(mp4_raw):
+    """Full pipeline for one recording. Runs on a worker thread, not the observer."""
+    log.info("New recording detected: %s", mp4_raw.name)
+
+    # Wait for the file to finish landing instead of a fixed sleep. This covers
+    # OBS finalizing the moov atom AND large copies/drags that take longer than
+    # the old 15s window. A vanished source (duplicate event, aborted copy)
+    # returns False and we bail cleanly.
+    if not wait_until_stable(mp4_raw):
+        log.info("Source %s vanished before it settled; skipping (likely duplicate event)", mp4_raw.name)
+        return
+    log.info("Source %s settled (%d bytes); processing", mp4_raw.name, mp4_raw.stat().st_size)
+
+    # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
+    # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
+    # as a lock: whichever invocation creates the directory first owns this
+    # recording. A racing duplicate will get FileExistsError and exit clean.
+    # The original .mp4 stays in RAW as a safety net for retries.
+    meeting_dir = MEETINGS / mp4_raw.stem
+    try:
+        meeting_dir.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        log.info("Meeting folder %s already claimed; skipping", meeting_dir.name)
+        return
+    log.info("Created meeting folder: %s", meeting_dir)
+
+    mp4 = meeting_dir / mp4_raw.name
+    log.info("Copying recording into meeting folder")
+    shutil.copy2(str(mp4_raw), str(mp4))
+
+    mp3            = meeting_dir / f"{mp4.stem}.mp3"
+    transcript_txt = meeting_dir / "transcript.txt"
+    summary_md     = meeting_dir / "summary.md"
+
+    # --- Stage 2: extract audio, transcribe, summarize (all inside meeting_dir) ---
+    log.info("Extracting audio with FFmpeg")
+    subprocess.run(["ffmpeg", "-i", str(mp4), "-vn", "-q:a", "2", str(mp3)],
+                   check=True, capture_output=True)
+
+    log.info("Transcribing with faster-whisper")
+    model = get_whisper_model()
+    segments, info = model.transcribe(
+        str(mp3),
+        language="en",                 # meetings are English; skip detection (remove for auto-detect)
+        beam_size=5,                   # more robust than greedy decoding
+        vad_filter=True,               # Silero VAD strips silence -> kills silence-hallucination at the source
+        vad_parameters=dict(min_silence_duration_ms=500, speech_pad_ms=400),
+        condition_on_previous_text=False,  # the loop-killer: a bad segment can't poison the next (whisper.cpp -mc 0 analog)
+        no_speech_threshold=0.6,       # discard segments the model is confident are non-speech
+        word_timestamps=True,          # required for hallucination_silence_threshold below
+        hallucination_silence_threshold=2.0,  # skip silent gaps that tend to trigger hallucinated text
+    )
+    log.info("Detected %s (p=%.2f); %.0fs audio, %.0fs after VAD",
+             info.language, info.language_probability, info.duration, info.duration_after_vad)
+
+    # `segments` is a lazy generator — iterating it is what actually runs the
+    # transcription. We log progress periodically since CPU-only runs are slow.
+    lines = []
+    for i, seg in enumerate(segments, 1):
+        lines.append(seg.text.strip())
+        if i % 25 == 0:
+            log.info("  …%d segments transcribed, up to %.0fs", i, seg.end)
+    transcript = "\n".join(lines)
+    transcript_txt.write_text(transcript + "\n", encoding="utf-8")
+    log.info("Transcript ready (%d chars, %d segments)", len(transcript), len(lines))
+
+    log.info("Summarizing with Ollama (%s)", LLM)
+    resp = ollama.chat(
+        model=LLM,
+        messages=[{"role": "user", "content":
+            "Summarize this client meeting. Output sections: Context, "
+            "Decisions, Action items (owner + due date), Open questions.\n\n"
+            + transcript}],
+        options={"num_ctx": 16384}
+    )
+    summary_md.write_text(resp["message"]["content"])
+
+    # --- Stage 3: mirror the completed meeting folder to iCloud ---
+    log.info("Copying meeting folder to iCloud")
+    out = ICLOUD / mp4.stem
+    if out.exists():
+        log.info("Existing iCloud folder found, replacing: %s", out)
+        shutil.rmtree(out)
+    shutil.copytree(meeting_dir, out)
+    log.info("Done -> %s", out)
+
+
+def worker():
+    """Drain the work queue forever. One of these runs per worker thread.
+
+    Each item is wrapped in the same try/except that on_created used to carry, so
+    a failure on one recording is logged and the worker moves on to the next
+    rather than dying. The _inflight bookkeeping is always cleared in finally so
+    a failed/duplicate file can be retried by a later event.
+    """
+    while True:
+        mp4_raw = work_q.get()
+        try:
+            process(mp4_raw)
+        except subprocess.CalledProcessError as exc:
+            log.error("Subprocess failed for %s: %s", mp4_raw, exc)
+            log.error("stderr:\n%s", (exc.stderr or b"").decode(errors="replace"))
+        except Exception:
+            log.error("Pipeline failed for %s:\n%s", mp4_raw, traceback.format_exc())
+        finally:
+            with _inflight_lock:
+                _inflight.discard(str(mp4_raw))
+            work_q.task_done()
+
+
 class Handler(FileSystemEventHandler):
     def on_created(self, e):
         # Only react to .mp4 files dropped directly into RAW by OBS.
         # The observer is non-recursive, so subdirectory events don't fire here,
         # and non-mp4 creations are filtered out by the extension check.
-        if e.is_directory or not e.src_path.endswith(".mp4"): return
-        try:
-            self.process(Path(e.src_path))
-        except subprocess.CalledProcessError as exc:
-            log.error("Subprocess failed for %s: %s", e.src_path, exc)
-            log.error("stderr:\n%s", (exc.stderr or b"").decode(errors="replace"))
-        except Exception:
-            log.error("Pipeline failed for %s:\n%s", e.src_path, traceback.format_exc())
-
-    def process(self, mp4_raw):
-        log.info("New recording detected: %s", mp4_raw.name)
-
-        # Wait for the file to finish landing instead of a fixed sleep. This
-        # covers OBS finalizing the moov atom AND large copies/drags that take
-        # longer than the old 15s window. A vanished source (duplicate event,
-        # aborted copy) returns False and we bail cleanly.
-        if not wait_until_stable(mp4_raw):
-            log.info("Source %s vanished before it settled; skipping (likely duplicate event)", mp4_raw.name)
+        #
+        # This callback now does almost nothing: it filters, de-dupes, and hands
+        # the path to the work queue. All the slow work happens on a worker
+        # thread, so the observer stays free to notice the next file immediately.
+        if e.is_directory or not e.src_path.endswith(".mp4"):
             return
-        log.info("Source %s settled (%d bytes); processing", mp4_raw.name, mp4_raw.stat().st_size)
-
-        # --- Stage 1: create per-meeting subdirectory in MEETINGS and copy the .mp4 in ---
-        # mkdir(exist_ok=False) is atomic at the filesystem level, so it doubles
-        # as a lock: whichever invocation creates the directory first owns this
-        # recording. A racing duplicate will get FileExistsError and exit clean.
-        # The original .mp4 stays in RAW as a safety net for retries.
-        meeting_dir = MEETINGS / mp4_raw.stem
-        try:
-            meeting_dir.mkdir(parents=True, exist_ok=False)
-        except FileExistsError:
-            log.info("Meeting folder %s already claimed; skipping", meeting_dir.name)
-            return
-        log.info("Created meeting folder: %s", meeting_dir)
-
-        mp4 = meeting_dir / mp4_raw.name
-        log.info("Copying recording into meeting folder")
-        shutil.copy2(str(mp4_raw), str(mp4))
-
-        mp3            = meeting_dir / f"{mp4.stem}.mp3"
-        transcript_txt = meeting_dir / "transcript.txt"
-        summary_md     = meeting_dir / "summary.md"
-
-        # --- Stage 2: extract audio, transcribe, summarize (all inside meeting_dir) ---
-        log.info("Extracting audio with FFmpeg")
-        subprocess.run(["ffmpeg", "-i", str(mp4), "-vn", "-q:a", "2", str(mp3)],
-                       check=True, capture_output=True)
-
-        log.info("Transcribing with faster-whisper")
-        model = get_whisper_model()
-        segments, info = model.transcribe(
-            str(mp3),
-            language="en",                 # meetings are English; skip detection (remove for auto-detect)
-            beam_size=5,                   # more robust than greedy decoding
-            vad_filter=True,               # Silero VAD strips silence -> kills silence-hallucination at the source
-            vad_parameters=dict(min_silence_duration_ms=500, speech_pad_ms=400),
-            condition_on_previous_text=False,  # the loop-killer: a bad segment can't poison the next (whisper.cpp -mc 0 analog)
-            no_speech_threshold=0.6,       # discard segments the model is confident are non-speech
-            word_timestamps=True,          # required for hallucination_silence_threshold below
-            hallucination_silence_threshold=2.0,  # skip silent gaps that tend to trigger hallucinated text
-        )
-        log.info("Detected %s (p=%.2f); %.0fs audio, %.0fs after VAD",
-                 info.language, info.language_probability, info.duration, info.duration_after_vad)
-
-        # `segments` is a lazy generator — iterating it is what actually runs the
-        # transcription. We log progress periodically since CPU-only runs are slow.
-        lines = []
-        for i, seg in enumerate(segments, 1):
-            lines.append(seg.text.strip())
-            if i % 25 == 0:
-                log.info("  …%d segments transcribed, up to %.0fs", i, seg.end)
-        transcript = "\n".join(lines)
-        transcript_txt.write_text(transcript + "\n", encoding="utf-8")
-        log.info("Transcript ready (%d chars, %d segments)", len(transcript), len(lines))
-
-        log.info("Summarizing with Ollama (%s)", LLM)
-        resp = ollama.chat(
-            model=LLM,
-            messages=[{"role": "user", "content":
-                "Summarize this client meeting. Output sections: Context, "
-                "Decisions, Action items (owner + due date), Open questions.\n\n"
-                + transcript}],
-            options={"num_ctx": 16384}
-        )
-        summary_md.write_text(resp["message"]["content"])
-
-        # --- Stage 3: mirror the completed meeting folder to iCloud ---
-        log.info("Copying meeting folder to iCloud")
-        out = ICLOUD / mp4.stem
-        if out.exists():
-            log.info("Existing iCloud folder found, replacing: %s", out)
-            shutil.rmtree(out)
-        shutil.copytree(meeting_dir, out)
-        log.info("Done → %s", out)
+        with _inflight_lock:
+            if e.src_path in _inflight:
+                # A duplicate FSEvent for a file we've already queued / are
+                # processing. Drop it here; the mkdir lock would catch it later
+                # anyway, but skipping the enqueue avoids a redundant settle wait.
+                return
+            _inflight.add(e.src_path)
+        work_q.put(Path(e.src_path))
 
 
 if __name__ == "__main__":
-    log.info("Meeting pipeline watcher starting. Watching %s", RAW)
+    log.info("Meeting pipeline watcher starting. Watching %s (%d worker%s)",
+             RAW, NUM_WORKERS, "" if NUM_WORKERS == 1 else "s")
+
+    # Start the worker pool before the observer so no enqueued file waits on
+    # a not-yet-running consumer. Daemon threads so they don't block process exit.
+    for n in range(NUM_WORKERS):
+        threading.Thread(target=worker, name=f"worker-{n}", daemon=True).start()
+
     obs = Observer()
     obs.schedule(Handler(), str(RAW))
     obs.start()
