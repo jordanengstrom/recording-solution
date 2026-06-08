@@ -620,3 +620,84 @@ FileNotFoundError: [Errno 2] No such file or directory: '/Users/jordan/Recording
 2026-06-04 12:45:34,540 [INFO]   …225 segments transcribed, up to 1268s
 2026-06-04 12:47:53,792 [INFO]   …250 segments transcribed, up to 1373s
 2026-06-04 12:50:04,716 [INFO]   …275 segments transcribed, up to 1491s
+2026-06-04 12:53:36,413 [INFO]   …300 segments transcribed, up to 1665s
+2026-06-04 12:56:36,453 [INFO]   …325 segments transcribed, up to 1862s
+2026-06-04 12:57:28,291 [INFO]   …350 segments transcribed, up to 1970s
+2026-06-04 12:58:32,267 [INFO]   …375 segments transcribed, up to 2152s
+2026-06-04 12:59:49,378 [INFO]   …400 segments transcribed, up to 2321s
+2026-06-04 13:00:34,658 [INFO]   …425 segments transcribed, up to 2440s
+2026-06-04 13:01:54,067 [INFO]   …450 segments transcribed, up to 2607s
+2026-06-04 13:02:25,597 [INFO]   …475 segments transcribed, up to 2686s
+2026-06-04 13:03:16,082 [INFO]   …500 segments transcribed, up to 2818s
+2026-06-04 13:03:16,085 [INFO] Transcript ready (32326 chars, 508 segments)
+2026-06-04 13:03:16,085 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 13:04:02,587 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 13:04:02,633 [INFO] Copying meeting folder to iCloud
+2026-06-04 13:04:05,299 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_11-32-46
+2026-06-04 13:11:40,146 [INFO] New recording detected: 2026-06-04_13-11-40.mp4
+2026-06-04 13:11:55,191 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_13-11-40
+2026-06-04 13:11:55,192 [INFO] Copying recording into meeting folder
+2026-06-04 13:11:55,206 [INFO] Extracting audio with FFmpeg
+2026-06-04 13:11:55,404 [INFO] Transcribing with faster-whisper
+2026-06-04 13:11:55,563 [INFO] Processing audio with duration 00:10.708
+2026-06-04 13:11:55,611 [INFO] VAD filter removed 00:10.708 of audio
+2026-06-04 13:11:55,627 [INFO] Detected en (p=1.00); 11s audio, 0s after VAD
+2026-06-04 13:11:55,628 [INFO] Transcript ready (0 chars, 0 segments)
+2026-06-04 13:11:55,628 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 13:12:27,160 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 13:12:27,175 [INFO] Copying meeting folder to iCloud
+2026-06-04 13:12:27,208 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_13-11-40
+2026-06-04 13:12:27,209 [INFO] New recording detected: 2026-06-04_13-11-40.mp4
+2026-06-04 13:12:42,281 [INFO] Meeting folder 2026-06-04_13-11-40 already claimed; skipping
+2026-06-04 14:14:35,103 [INFO] New recording detected: 2026-06-04_13-11-40.mp4
+2026-06-04 14:14:50,185 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_13-11-40
+2026-06-04 14:14:50,185 [INFO] Copying recording into meeting folder
+2026-06-04 14:14:53,134 [INFO] Extracting audio with FFmpeg
+2026-06-04 14:15:00,735 [INFO] Transcribing with faster-whisper
+2026-06-04 14:15:02,280 [INFO] Processing audio with duration 25:32.244
+2026-06-04 14:15:06,873 [INFO] VAD filter removed 04:31.604 of audio
+2026-06-04 14:15:07,637 [INFO] Detected en (p=1.00); 1532s audio, 1261s after VAD
+2026-06-04 14:16:29,253 [INFO]   …25 segments transcribed, up to 260s
+2026-06-04 14:17:58,391 [INFO]   …50 segments transcribed, up to 453s
+2026-06-04 14:19:06,260 [INFO]   …75 segments transcribed, up to 653s
+2026-06-04 14:20:28,566 [INFO]   …100 segments transcribed, up to 845s
+2026-06-04 14:21:48,981 [INFO]   …125 segments transcribed, up to 1014s
+2026-06-04 14:23:06,507 [INFO]   …150 segments transcribed, up to 1187s
+2026-06-04 14:24:25,557 [INFO]   …175 segments transcribed, up to 1361s
+2026-06-04 14:25:23,944 [INFO]   …200 segments transcribed, up to 1495s
+2026-06-04 14:25:48,345 [INFO] Transcript ready (16042 chars, 208 segments)
+2026-06-04 14:25:48,346 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 14:26:21,287 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:26:21,435 [INFO] Copying meeting folder to iCloud
+2026-06-04 14:26:24,056 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_13-11-40
+2026-06-04 16:00:25,767 [INFO] New recording detected: 2026-06-04_16-00-25.mp4
+2026-06-04 16:00:40,902 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-04_16-00-25
+2026-06-04 16:00:40,902 [INFO] Copying recording into meeting folder
+2026-06-04 16:00:40,913 [INFO] Extracting audio with FFmpeg
+2026-06-04 16:00:41,174 [INFO] Transcribing with faster-whisper
+2026-06-04 16:00:41,295 [INFO] Processing audio with duration 00:12.372
+2026-06-04 16:00:41,336 [INFO] VAD filter removed 00:01.008 of audio
+2026-06-04 16:00:41,355 [INFO] Detected en (p=1.00); 12s audio, 11s after VAD
+2026-06-04 16:00:50,293 [INFO] Transcript ready (115 chars, 2 segments)
+2026-06-04 16:00:50,294 [INFO] Summarizing with Ollama (qwen2.5:7b)
+2026-06-04 16:01:05,690 [INFO] HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:01:05,707 [INFO] Copying meeting folder to iCloud
+2026-06-04 16:01:05,750 [INFO] Done → /Users/jordan/Library/Mobile Documents/com~apple~CloudDocs/Meetings/2026-06-04_16-00-25
+2026-06-04 16:01:05,763 [INFO] New recording detected: 2026-06-04_16-00-25.mp4
+2026-06-04 16:01:20,844 [INFO] Meeting folder 2026-06-04_16-00-25 already claimed; skipping
+2026-06-08 13:18:47,382 [INFO] Meeting pipeline watcher starting. Watching /Users/jordan/Recordings/Meetings-Raw
+2026-06-08 13:19:04,089 [INFO] New recording detected: 2026-06-08_09-00-15.mp4
+2026-06-08 13:19:19,153 [INFO] Created meeting folder: /Users/jordan/Recordings/Meetings/2026-06-08_09-00-15
+2026-06-08 13:19:19,153 [INFO] Copying recording into meeting folder
+2026-06-08 13:19:21,013 [INFO] Extracting audio with FFmpeg
+2026-06-08 13:19:34,231 [INFO] Transcribing with faster-whisper
+2026-06-08 13:19:34,232 [INFO] Loading faster-whisper model 'large-v3' (cpu / int8) — first use only
+2026-06-08 13:19:35,080 [INFO] HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-large-v3/revision/main "HTTP/1.1 200 OK"
+2026-06-08 13:19:40,966 [INFO] Processing audio with duration 50:01.321
+2026-06-08 13:19:53,541 [INFO] VAD filter removed 06:03.369 of audio
+2026-06-08 13:19:54,343 [INFO] Detected en (p=1.00); 3001s audio, 2638s after VAD
+2026-06-08 13:21:11,364 [INFO]   …25 segments transcribed, up to 242s
+2026-06-08 13:22:19,661 [INFO]   …50 segments transcribed, up to 431s
+2026-06-08 13:23:26,449 [INFO]   …75 segments transcribed, up to 570s
+2026-06-08 13:24:57,407 [INFO]   …100 segments transcribed, up to 760s
+2026-06-08 13:26:23,376 [INFO]   …125 segments transcribed, up to 910s
