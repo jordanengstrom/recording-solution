@@ -1,0 +1,3 @@
+faster-whisper      # transcription (pulls in ctranslate2, a compiled C++ extension — see note below)
+watchdog            # FSEvents file watcher
+ollama              # client for the local Ollama server on :11434
