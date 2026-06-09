@@ -101,12 +101,20 @@ _inflight_lock = threading.Lock()
 
 # --- File-stability settling ---
 # OBS finalizing its moov atom, a Finder drag, or a cross-volume `cp` all leave
-# the file growing after the on_created event fires. Instead of a fixed sleep,
-# poll size+mtime until they stop changing for SETTLE_STABLE_CHECKS consecutive
-# polls. This adapts to a 12s in-place finalize and a 4-minute multi-GB copy alike.
+# the file growing after the on_created event fires. More importantly, OBS fires
+# on_created when it *opens* the file at the START of recording, so the file then
+# grows for the entire meeting. We must wait out the whole recording, which has
+# no fixed upper bound — a long all-hands can run for hours.
+#
+# So we poll size+mtime and call it done after SETTLE_STABLE_CHECKS consecutive
+# unchanged samples. Crucially, SETTLE_TIMEOUT is a *stall* ceiling, not a cap on
+# total elapsed time: it only counts time during which the file is NOT growing
+# (see wait_until_stable). As long as the recording keeps growing the file we
+# keep waiting, so meetings of any length are fine; we give up only if the file
+# stops growing yet never settles — i.e. a wedged writer, not a long meeting.
 SETTLE_POLL_SECONDS  = 3     # seconds between size/mtime samples
 SETTLE_STABLE_CHECKS = 3     # consecutive unchanged samples required to call it done
-SETTLE_TIMEOUT       = 1800  # hard ceiling (s); give up rather than wait forever
+SETTLE_TIMEOUT       = 1800  # stall ceiling (s): max time with no growth before giving up
 
 # faster-whisper (CTranslate2). On Apple Silicon CTranslate2 has no Metal/GPU
 # backend, so this runs CPU-only; int8 is the best-performing CPU precision.
@@ -151,17 +159,23 @@ def get_whisper_model():
 
 
 def wait_until_stable(path):
-    """Block until `path` stops growing, or raise if it vanishes / never settles.
+    """Block until `path` stops growing, or raise if it vanishes / stalls.
 
     Returns True when the file's (size, mtime) is unchanged across
     SETTLE_STABLE_CHECKS consecutive polls. Returns False if the file
     disappears mid-wait (a duplicate-event source that was already claimed and
-    cleaned up, or an aborted copy). Raises TimeoutError if it never settles
-    within SETTLE_TIMEOUT — better to surface that than to transcode a partial.
+    cleaned up, or an aborted copy).
+
+    The timeout is measured against *inactivity*, not total elapsed time: the
+    clock resets every time the file grows. OBS fires on_created at the start of
+    recording, so this routine waits out the entire meeting (however long) and
+    only raises TimeoutError if the file goes SETTLE_TIMEOUT seconds without
+    growing yet never holds still long enough to look finished — i.e. something
+    is genuinely wedged, not just a long recording.
     """
-    deadline   = time.monotonic() + SETTLE_TIMEOUT
-    last_sig   = None
-    stable_for = 0
+    last_sig    = None
+    stable_for  = 0
+    last_growth = time.monotonic()
 
     while True:
         try:
@@ -175,12 +189,14 @@ def wait_until_stable(path):
             if stable_for >= SETTLE_STABLE_CHECKS:
                 return True
         else:
+            if last_sig is None or st.st_size > last_sig[0]:
+                last_growth = time.monotonic()   # still recording — keep waiting, any length
             stable_for = 0
             last_sig = sig
 
-        if time.monotonic() > deadline:
+        if time.monotonic() - last_growth > SETTLE_TIMEOUT:
             raise TimeoutError(
-                f"{path.name} never stopped changing within {SETTLE_TIMEOUT}s "
+                f"{path.name} stopped growing but never settled within {SETTLE_TIMEOUT}s "
                 f"(last size {sig[0]} bytes)"
             )
         time.sleep(SETTLE_POLL_SECONDS)
