@@ -7,8 +7,7 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/jordan/dev/recording-solution/.venv/bin/python</string>
-        <string>/Users/jordan/dev/recording-solution/meeting_pipeline.py</string>
+        <string>/Users/jordan/dev/recording-solution/bin/meetingpipeline</string>
     </array>
 
     <key>EnvironmentVariables</key>
@@ -23,9 +22,9 @@
     <key>KeepAlive</key>
     <true/>
 
-    <!-- Fallback log files for anything that bypasses Python's logging
-         (import errors, syntax errors, early startup crashes).
-         The main pipeline.log is owned and rotated by Python itself. -->
+    <!-- Fallback log files for anything that bypasses the daemon's logging
+         (single-instance lock refusals, early startup crashes).
+         The main pipeline.log is owned and trimmed by the daemon itself. -->
     <key>StandardOutPath</key>
     <string>/Users/jordan/dev/recording-solution/pipeline-stdout.log</string>
 
