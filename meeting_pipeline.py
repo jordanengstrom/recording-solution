@@ -88,7 +88,7 @@ LLM      = "qwen2.5:7b"   # local model served by Ollama on :11434
 # at once just thrashes the cores and helps nothing. 1 keeps behaviour identical
 # to the old serial pipeline (just with a responsive watcher); 2 lets a short
 # meeting slip past a long one. Above ~2 is almost never worth it on one machine.
-NUM_WORKERS = 1
+NUM_WORKERS = 2
 work_q: "queue.Queue[Path]" = queue.Queue()
 
 # Files currently queued or in flight, so a duplicate FSEvent for a path we're
